@@ -37,7 +37,7 @@
               --enable=rhel-7-server-extras-rpms
               --enable=rhel-7-server-optional-rpms
               --enable=rhel-7-server-ose-3.0-rpms
-  when: "{{ openshift.common.hostname }} in groups['nodes']"
+  when: "'{{ openshift.common.hostname }}' in {{ groups['nodes'] }}"
   ignore_errors: True
           # TODO make idempotent
 
@@ -50,11 +50,12 @@
     - bridge-utils
     - bind-utils
     - wget
-  when: "{{ openshift.common.hostname }} in groups['nodes']"
+    - git
+  when: "'{{ openshift.common.hostname }}' in {{ groups['nodes'] }}"
 
 - name: Configure docker insecure regirty
   lineinfile: >
           dest=/etc/sysconfig/docker
           regexp=^OPTIONS
           line='OPTIONS=--selinux-enabled --insecure-registry 172.30.0.0/16'
-  when: "{{ openshift.common.hostname }} in groups['nodes']"
+  when: "'{{ openshift.common.hostname }}' in {{ groups['nodes'] }}"
