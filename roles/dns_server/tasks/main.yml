@@ -10,19 +10,19 @@
 - name: Install bind DNS server
   yum: name=bind state=latest
 
-  # FIXME: this should be generated
+  # FIXME: this should be generated, not copied
 - name: Copy rndc key
   copy: src=rndc.key dest=/etc/rndc.key mode=0640 owner=root group=named
 
 - name: Internal zone file
-  template: src=example.com-internal dest=/var/named/static/{{ dns_domain }}-internal
+  template: src=example.com-internal dest={{ named_dir}}/{{ dns_domain }}-internal
 
 - name: External zone file
-  template: src=example.com dest=/var/named/static/{{ dns_domain }}
+  template: src=example.com dest={{ named_dir}}/{{ dns_domain }}
 
   # TODO: this one needs further "templatization"
 - name: Reverse zone file
-  template: src=192.168.1 dest=/var/named/static/192.168.1
+  template: src=192.168.1 dest={{ named_dir}}/192.168.1
 
 - name: Build named.conf
   template: src=named.conf dest=/etc/named.conf
