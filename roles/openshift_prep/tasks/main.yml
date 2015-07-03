@@ -19,18 +19,17 @@
 
 - name: Register Systems
   redhat_subscription: state=present
-          username={{ lookup('env', 'RH_USERNAME') }}
-          password={{ lookup('env', 'RH_PASSWORD') }}
-          autosubscribe=false
-
-- name: Attach subscriptions
-  command: /usr/bin/subscription-manager attach --pool={{ lookup('env', 'RH_POOL_ID') }}
+          username={{ rh_user }}
+          password={{ rh_pass }}
+          pool={{ rh_pool }}
 
 - name: Disable default repos
   command: /usr/bin/subscription-manager repos --disable=*
+          # TODO make idempotent
 
 - name: Enable RHEL7 base repo
   command: /usr/bin/subscription-manager repos --enable=rhel-7-server-rpms
+          # TODO make idempotent
 
 - name: Enable extra repos
   command: >
@@ -39,6 +38,8 @@
               --enable=rhel-7-server-optional-rpms
               --enable=rhel-7-server-ose-3.0-rpms
   when: "{{ openshift.common.hostname }} in groups['nodes']"
+  ignore_errors: True
+          # TODO make idempotent
 
 - name: Install base packages
   yum: state=latest name={{ item }}
