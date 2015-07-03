@@ -22,7 +22,7 @@
 
   # TODO: this one needs further "templatization"
 - name: Reverse zone file
-  template: src=192.168.1 dest={{ named_dir}}/192.168.1
+  template: src=192.168.1 dest={{ named_dir}}/{{ subnet }}
 
 - name: Build named.conf
   template: src=named.conf dest=/etc/named.conf

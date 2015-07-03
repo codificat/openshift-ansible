@@ -11,11 +11,15 @@
 
 $TTL 600	; 10 minutes
 
-dns		IN A    10.34.92.209
+{% for host in play_hosts %}
+{{ hostvars[host].openshift.common.hostname }}. IN A    {{ hostvars[host].openshift.common.public_ip }}
+{% endfor %}
 
-ose3-master	IN A	10.34.92.210
-ose3-node1	IN A	10.34.92.211
-ose3-node2	IN A	10.34.92.212
+;dns		IN A    10.34.92.209
+;ose3-master	IN A	10.34.92.210
+;ose3-node1	IN A	10.34.92.211
+;ose3-node2	IN A	10.34.92.212
 
 ; This is where the router(s) run
+; FIXME: who do we point to by default
 *.apps		IN CNAME	ose3-node2
