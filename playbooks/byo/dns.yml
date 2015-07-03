@@ -1,0 +1,10 @@
+---
+- name: Configure DNS server
+  hosts: dns
+  roles:
+    - dns_server
+
+- name: Make systems use DNS server
+  hosts: all
+  roles:
+    - dns_client

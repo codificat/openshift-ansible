@@ -1,0 +1,15 @@
+$TTL 60  ; 1 minute
+@		IN SOA	dns.{{ dns_domain }}. hostmaster.{{ dns_domain }}. (
+				2012113000 ; serial
+				60         ; refresh (1 minute)
+				15         ; retry (15 seconds)
+				1800       ; expire (30 minutes)
+				10         ; minimum (10 seconds)
+				)
+			NS	dns.{{ dns_domain }}.
+
+
+10	IN PTR	dns.{{ dns_domain }}.
+11	IN PTR	ose3-master.{{ dns_domain }}.
+12	IN PTR	ose3-node1.{{ dns_domain }}.
+13	IN PTR	ose3-node2.{{ dns_domain }}.
