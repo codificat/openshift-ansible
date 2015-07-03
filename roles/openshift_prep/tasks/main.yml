@@ -1,5 +1,5 @@
 ---
-- name: Get OpenShift facts
+- name: Set OpenShift facts
   openshift_facts:
     local_facts:
       hostname: "{{ openshift_hostname | default(None) }}"
