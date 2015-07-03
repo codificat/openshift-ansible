@@ -1,0 +1,4 @@
+---
+rh_user: "{{ lookup('env', 'RH_USERNAME') }}"
+rh_pass: "{{ lookup('env', 'RH_PASSWORD') }}"
+rh_pool: "{{ lookup('env', 'RH_POOL_ID') }}"

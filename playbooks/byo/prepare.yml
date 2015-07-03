@@ -1,0 +1,6 @@
+---
+- name: Prepare OpenShift hosts for deployment
+  hosts: all
+  gather_facts: no
+  roles: 
+    - openshift_prep
