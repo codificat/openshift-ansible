@@ -12,6 +12,12 @@ def ptr_record(ip):
     else:
         return ip
 
+def reverse_zone(subnet):
+    # From "192.168.1" it returns "1.168.192.in-addr.arpa"
+    zone = subnet.split('.')
+    zone.reverse()
+    return '.'.join(zone) + ".in-addr.arpa"
+
 class FilterModule(object):
     def filters(self):
-        return {'ptr_record': ptr_record}
+        return { 'ptr_record': ptr_record, 'reverse_zone': reverse_zone }
