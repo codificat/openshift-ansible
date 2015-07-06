@@ -4,5 +4,8 @@ dns_domain: "{{ lookup('env', 'CLOUD_DOMAIN')|default('example.com', true) }}"
         # FIXME getting the DNS server IP address
 dns_server: "{{ hostvars['dns.example.com'].openshift.common.ip }}"
 named_dir: /var/named
-# FIXME: calculate subnet from the hosts' internal IP
+forwarders:
+  - 10.5.30.45
+  - 10.5.30.46
+        # FIXME: calculate subnet from the hosts' internal IP
 subnet: "192.168.1"
