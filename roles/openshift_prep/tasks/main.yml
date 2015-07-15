@@ -10,6 +10,7 @@
 - name: Disable cloud-init
   service: name={{ item }} enabled=no
   with_items:
+    - cloud-config
     - cloud-init
     - cloud-final
     - cloud-init-local
