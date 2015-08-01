@@ -23,9 +23,11 @@
           username={{ rh_user }}
           password={{ rh_pass }}
           pool={{ rh_pool }}
+  ignore_errors: True
 
 - name: Disable default repos
   command: /usr/bin/subscription-manager repos --disable=*
+  ignore_errors: True
           # TODO make idempotent
 
 - name: Enable RHEL7 base repo
@@ -38,7 +40,7 @@
               --enable=rhel-7-server-extras-rpms
               --enable=rhel-7-server-optional-rpms
               --enable=rhel-7-server-ose-3.0-rpms
-  when: "'{{ openshift.common.hostname }}' in {{ groups['nodes'] }}"
+  when: groups.nodes is defined and groups.nodes
   ignore_errors: True
           # TODO make idempotent
 
@@ -52,11 +54,11 @@
     - bind-utils
     - wget
     - git
-  when: "'{{ openshift.common.hostname }}' in {{ groups['nodes'] }}"
+  when: groups.nodes is defined and groups.nodes
 
 - name: Configure docker insecure regirty
   lineinfile: >
           dest=/etc/sysconfig/docker
           regexp=^OPTIONS
           line='OPTIONS=--selinux-enabled --insecure-registry 172.30.0.0/16'
-  when: "'{{ openshift.common.hostname }}' in {{ groups['nodes'] }}"
+  when: groups.nodes is defined and groups.nodes
