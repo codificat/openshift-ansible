@@ -1,0 +1,2 @@
+DEVS=/dev/vdc
+VG=docker-vg
