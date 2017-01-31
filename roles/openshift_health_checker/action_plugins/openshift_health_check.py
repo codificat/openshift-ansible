@@ -1,4 +1,5 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
+import sys
+import os
 
 try:
     from __main__ import display
@@ -7,6 +8,12 @@ except ImportError:
     display = Display()
 
 from ansible.plugins.action import ActionBase
+
+# Augment sys.path so that we can import checks from a directory relative to
+# this callback plugin.
+sys.path.insert(1, os.path.dirname(os.path.dirname(__file__)))
+
+from openshift_checks import OpenShiftCheck, OpenShiftCheckException
 
 
 class ActionModule(ActionBase):
@@ -82,155 +89,3 @@ class ActionModule(ActionBase):
             known_checks[check_name] = cls(module_executor=self._execute_module)
 
         return known_checks
-
-
-class OpenShiftCheckException(Exception):
-    pass
-
-
-class OpenShiftCheck(object):
-    """A base class for defining checks for an OpenShift cluster environment."""
-
-    __metaclass__ = ABCMeta
-
-    def __init__(self, module_executor):
-        self.module_executor = module_executor
-
-    @abstractproperty
-    def name(self):
-        """The name of this check, usually derived from the class name."""
-        return "openshift_check"
-
-    @classmethod
-    def is_active(cls, task_vars):
-        """Returns true if this check applies to the ansible-playbook run."""
-        return True
-
-    @abstractmethod
-    def run(self, tmp, task_vars):
-        """Executes a check, normally implemented as a module."""
-        return {}
-
-    @classmethod
-    def subclasses(cls):
-        """Returns a generator of subclasses of this class and its subclasses."""
-        for subclass in cls.__subclasses__():
-            yield subclass
-            for subclass in subclass.subclasses():
-                yield subclass
-
-
-class NotContainerized(object):
-    """Mixin for checks that are only active when not in containerized mode."""
-
-    @classmethod
-    def is_active(cls, task_vars):
-        return (
-            super(NotContainerized, cls).is_active(task_vars)
-            and not cls.is_containerized(task_vars)
-        )
-
-    @staticmethod
-    def is_containerized(task_vars):
-        try:
-            return task_vars["openshift"]["common"]["is_containerized"]
-        except (KeyError, TypeError):
-            raise OpenShiftCheckException("'openshift.common.is_containerized' is undefined")
-
-
-class PackageAvailability(NotContainerized, OpenShiftCheck):
-    """Check that required RPM packages are available."""
-
-    name = "package_availability"
-
-    def run(self, tmp, task_vars):
-        try:
-            rpm_prefix = task_vars["openshift"]["common"]["service_type"]
-        except (KeyError, TypeError):
-            raise OpenShiftCheckException("'openshift.common.service_type' is undefined")
-
-        group_names = task_vars.get("group_names", [])
-
-        packages = set()
-
-        if "masters" in group_names:
-            packages.update(self.master_packages(rpm_prefix))
-        if "nodes" in group_names:
-            packages.update(self.node_packages(rpm_prefix))
-
-        args = {"packages": sorted(set(packages))}
-        return self.module_executor("check_yum_update", args, tmp, task_vars)
-
-    @staticmethod
-    def master_packages(rpm_prefix):
-        return [
-            "{rpm_prefix}".format(rpm_prefix=rpm_prefix),
-            "{rpm_prefix}-clients".format(rpm_prefix=rpm_prefix),
-            "{rpm_prefix}-master".format(rpm_prefix=rpm_prefix),
-            "bash-completion",
-            "cockpit-bridge",
-            "cockpit-docker",
-            "cockpit-kubernetes",
-            "cockpit-shell",
-            "cockpit-ws",
-            "etcd",
-            "httpd-tools",
-        ]
-
-    @staticmethod
-    def node_packages(rpm_prefix):
-        return [
-            "{rpm_prefix}".format(rpm_prefix=rpm_prefix),
-            "{rpm_prefix}-node".format(rpm_prefix=rpm_prefix),
-            "{rpm_prefix}-sdn-ovs".format(rpm_prefix=rpm_prefix),
-            "bind",
-            "ceph-common",
-            "dnsmasq",
-            "docker",
-            "firewalld",
-            "flannel",
-            "glusterfs-fuse",
-            "iptables-services",
-            "iptables",
-            "iscsi-initiator-utils",
-            "libselinux-python",
-            "nfs-utils",
-            "ntp",
-            "openssl",
-            "pyparted",
-            "python-httplib2",
-            "PyYAML",
-            "yum-utils",
-        ]
-
-
-class PackageUpdate(NotContainerized, OpenShiftCheck):
-    """Check that there are no conflicts in RPM packages."""
-
-    name = "package_update"
-
-    def run(self, tmp, task_vars):
-        args = {"packages": []}
-        return self.module_executor("check_yum_update", args, tmp, task_vars)
-
-
-class PackageVersion(NotContainerized, OpenShiftCheck):
-    """Check that available RPM packages match the required versions."""
-
-    name = "package_version"
-
-    @classmethod
-    def is_active(cls, task_vars):
-        return (
-            super(PackageVersion, cls).is_active(task_vars)
-            and task_vars.get("deployment_type") == "openshift-enterprise"
-        )
-
-    def run(self, tmp, task_vars):
-        try:
-            openshift_release = task_vars["openshift_release"]
-        except (KeyError, TypeError):
-            raise OpenShiftCheckException("'openshift_release' is undefined")
-
-        args = {"version": openshift_release}
-        return self.module_executor("aos_version", args, tmp, task_vars)
