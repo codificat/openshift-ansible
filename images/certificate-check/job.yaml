@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cert-checks
+  labels:
+    app: cert-checks
+spec:
+  parallelism: 1    
+  completions: 1    
+  template:     
+    metadata:
+      name: cert-checks
+      labels:
+        app: cert-checks
+    spec:
+      containers:
+      - name: checks
+        image: 172.30.155.195:5000/p2i/openshift-ansible
+        imagePullPolicy: "Always"
+        env:
+        - name: PLAYBOOK_FILE
+          value: playbooks/certificate_expiry/default.yaml
+        - name: INVENTORY_URL
+          value: http://192.168.55.1/hosts
+        - name: ANSIBLE_PRIVATE_KEY_FILE
+          value: /opt/app-root/src/.ssh/id_rsa/ssh-privatekey
+        - name: OPTS
+          value: "-v"
+        volumeMounts:
+        - name: sshkey
+          mountPath: /opt/app-root/src/.ssh/id_rsa
+      volumes:
+        - name: sshkey
+          secret:
+            secretName: sshkey
+      restartPolicy: Never
