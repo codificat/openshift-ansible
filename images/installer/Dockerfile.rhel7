@@ -29,6 +29,11 @@ RUN INSTALL_PKGS="atomic-openshift-utils atomic-openshift-clients python-boto" &
 
 USER ${USER_UID}
 
+# The base image uses the Python SCL image which has an active virtualenv
+# that does not use the system's Python packages; we want to use the main
+# Python installation instead so we update $PATH to put it first (BZ 1465724)
+ENV PATH=/usr/bin:/bin:/usr/local/bin:/sbin:/usr/sbin:${APP_ROOT}/bin
+
 # The playbook to be run is specified via the PLAYBOOK_FILE env var.
 # This sets a default of openshift_facts.yml as it's an informative playbook
 # that can help test that everything is set properly (inventory, sshkeys).
